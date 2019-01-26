@@ -125,15 +125,10 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
 
         List<GPUImageFilter> filters = new LinkedList<GPUImageFilter>();
-        filters.add(new GPUImageContrastFilter());
-        filters.add(new GPUImageBrightnessFilter());
 
-        filters.add(new GPUImageTransformFilter());
-
-        filters.add(GPUImageFilterTools.createBlendFilter(this, GPUImageChromaKeyBlendFilter.class,null));
 
         filterGroup = new GPUImageFilterGroup(filters);
-        switchFilterTo( filterGroup);
+        switchFilterTo( GPUImageFilterTools.createBlendFilter(this, GPUImageChromaKeyBlendFilter.class,null));
 
 
         seekBar.setProgress(50);
@@ -370,12 +365,6 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
                 textViewZoomValue.setText("Camera Zoom : " +  String.valueOf(progress));
                 zoomValue = progress;
-
-
-
-
-
-
 
 
                 break;

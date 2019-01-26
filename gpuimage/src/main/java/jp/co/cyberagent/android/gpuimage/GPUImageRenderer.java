@@ -26,6 +26,8 @@ import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
 
+import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.io.IOException;
@@ -100,23 +102,15 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     @Override
     public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
-
         mOutputWidth = width;
         mOutputHeight = height;
         GLES20.glViewport(0, 0, width, height);
-
         GLES20.glUseProgram(mFilter.getProgram());
-
         mFilter.onOutputSizeChanged(width, height);
-
-        BufferModifier.scaleBuffer(getImageBufferModifyParameters());
-
+        adjustImageScaling();
         synchronized (mSurfaceChangedWaiter) {
-
             mSurfaceChangedWaiter.notifyAll();
-
         }
-
     }
 
     @Override
@@ -169,30 +163,11 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                     if (mImageWidth != previewSize.width) {
                         mImageWidth = previewSize.width;
                         mImageHeight = previewSize.height;
-
-                        BufferModifier.scaleBuffer(getImageBufferModifyParameters());
-
+                        adjustImageScaling();
                     }
                 }
             });
         }
-    }
-
-    private ImageBufferModifyParameters getImageBufferModifyParameters(){
-
-        ImageBufferModifyParameters imageBufferModifyParameters = new ImageBufferModifyParameters();
-
-        imageBufferModifyParameters.setCUBE(CUBE);
-        imageBufferModifyParameters.setFlipHorizontal(mFlipHorizontal);
-        imageBufferModifyParameters.setFlipVertical(mFlipVertical);
-        imageBufferModifyParameters.setGLCubeBuffer(mGLCubeBuffer);
-        imageBufferModifyParameters.setGLTextureBuffer(mGLTextureBuffer);
-        imageBufferModifyParameters.setImageHeight(mImageHeight);
-        imageBufferModifyParameters.setImageWidth(mImageWidth);
-        imageBufferModifyParameters.setOutputHeight(mOutputHeight);
-        imageBufferModifyParameters.setOutputHeight(mOutputWidth);
-
-        return imageBufferModifyParameters;
     }
 
     public void setUpSurfaceTexture(final Camera camera) {
@@ -275,9 +250,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                 }
                 mImageWidth = bitmap.getWidth();
                 mImageHeight = bitmap.getHeight();
-
-                BufferModifier.scaleBuffer(getImageBufferModifyParameters());
-
+                adjustImageScaling();
             }
         });
     }
@@ -294,17 +267,61 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         return mOutputHeight;
     }
 
+    private void adjustImageScaling() {
+        float outputWidth = mOutputWidth;
+        float outputHeight = mOutputHeight;
+        if (mRotation == Rotation.ROTATION_270 || mRotation == Rotation.ROTATION_90) {
+            outputWidth = mOutputHeight;
+            outputHeight = mOutputWidth;
+        }
+
+        float ratio1 = outputWidth / mImageWidth;
+        float ratio2 = outputHeight / mImageHeight;
+        float ratioMax = Math.max(ratio1, ratio2);
+        int imageWidthNew = Math.round(mImageWidth * ratioMax);
+        int imageHeightNew = Math.round(mImageHeight * ratioMax);
+
+        float ratioWidth = imageWidthNew / outputWidth;
+        float ratioHeight = imageHeightNew / outputHeight;
+
+        float[] cube = CUBE;
+        float[] textureCords = TextureRotationUtil.getRotation(mRotation, mFlipHorizontal, mFlipVertical);
+        if (mScaleType == GPUImage.ScaleType.CENTER_CROP) {
+            float distHorizontal = (1 - 1 / ratioWidth) / 2;
+            float distVertical = (1 - 1 / ratioHeight) / 2;
+            textureCords = new float[]{
+                    addDistance(textureCords[0], distHorizontal), addDistance(textureCords[1], distVertical),
+                    addDistance(textureCords[2], distHorizontal), addDistance(textureCords[3], distVertical),
+                    addDistance(textureCords[4], distHorizontal), addDistance(textureCords[5], distVertical),
+                    addDistance(textureCords[6], distHorizontal), addDistance(textureCords[7], distVertical),
+            };
+        } else {
+            cube = new float[]{
+                    CUBE[0] / ratioHeight, CUBE[1] / ratioWidth,
+                    CUBE[2] / ratioHeight, CUBE[3] / ratioWidth,
+                    CUBE[4] / ratioHeight, CUBE[5] / ratioWidth,
+                    CUBE[6] / ratioHeight, CUBE[7] / ratioWidth,
+            };
+        }
+
+        mGLCubeBuffer.clear();
+        mGLCubeBuffer.put(cube).position(0);
+        mGLTextureBuffer.clear();
+        mGLTextureBuffer.put(textureCords).position(0);
+    }
+
+    private float addDistance(float coordinate, float distance) {
+        return coordinate == 0.0f ? distance : 1 - distance;
+    }
+
     public void setRotationCamera(final Rotation rotation, final boolean flipHorizontal,
-            final boolean flipVertical) {
+                                  final boolean flipVertical) {
         setRotation(rotation, flipVertical, flipHorizontal);
     }
 
     public void setRotation(final Rotation rotation) {
-
         mRotation = rotation;
-
-        BufferModifier.scaleBuffer(getImageBufferModifyParameters());
-
+        adjustImageScaling();
     }
 
     public void setRotation(final Rotation rotation,
