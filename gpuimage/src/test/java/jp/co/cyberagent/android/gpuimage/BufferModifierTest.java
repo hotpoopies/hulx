@@ -29,25 +29,19 @@ public class BufferModifierTest {
     @Before
     public void setUp() throws Exception{
 
-        floatBuffer = ByteBuffer
-                .allocate(CUBE.length*4) .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-
-        floatBuffer.put(CUBE).position(0);
-
-
+        
     }
 
     @Test
     public void shouldScaleFloatBufferIfDifferentHeightInputAndOutput(){
 
-        BufferScaler bufferModifier = getBufferModifier(5, 10,5,5);
+        ArrayFloatScaller bufferModifier = getBufferModifier(5, 10,5,5);
 
         Assert.assertNotEquals(bufferModifier.getInputHeight(),bufferModifier.getOutputHeight());
 
-        FloatBuffer outFloatBuffer =bufferModifier.scaleFloatBuffer(floatBuffer);
+        float[] outFloatBuffer =bufferModifier.scaleFloatBuffer(CUBE);
 
-        Assert.assertNotEquals(outFloatBuffer.get(0),floatBuffer.get(0));
+        Assert.assertNotEquals(outFloatBuffer[1],CUBE[1]);
 
     }
 
@@ -55,33 +49,33 @@ public class BufferModifierTest {
     @Test
     public void shouldScaleFloatBufferIfDifferentWidthInputAndOutput(){
 
-        BufferScaler bufferModifier = getBufferModifier(5, 5,5,10);
+        ArrayFloatScaller bufferModifier = getBufferModifier(5, 5,5,10);
 
         Assert.assertNotEquals(bufferModifier.getInputWidth(),bufferModifier.getOutputWidth());
 
-        FloatBuffer outFloatBuffer =bufferModifier.scaleFloatBuffer(floatBuffer);
+        float[] outFloatBuffer =bufferModifier.scaleFloatBuffer(CUBE);
 
-        Assert.assertNotEquals(outFloatBuffer.get(1),floatBuffer.get(1));
+        Assert.assertNotEquals(outFloatBuffer[0],CUBE[0]);
 
     }
 
     @Test
     public void shouldNotScaleFloatBuffer(){
 
-        BufferScaler bufferModifier = getBufferModifier(5, 5,5,5);
+        ArrayFloatScaller bufferModifier = getBufferModifier(5, 5,5,5);
 
         Assert.assertEquals(bufferModifier.getInputHeight(),bufferModifier.getOutputHeight());
         Assert.assertEquals(bufferModifier.getInputWidth(),bufferModifier.getOutputWidth());
 
-        FloatBuffer outFloatBuffer =bufferModifier.scaleFloatBuffer(floatBuffer);
+        float[] outFloatBuffer =bufferModifier.scaleFloatBuffer(CUBE);
 
-        Assert.assertEquals(outFloatBuffer.get(0),floatBuffer.get(0),0.0);
+        Assert.assertEquals(outFloatBuffer[0],CUBE[0],0.0);
 
     }
 
-    private BufferScaler getBufferModifier(int inputHeight, int outputHeight, int inputWidth , int outputWidth) {
+    private ArrayFloatScaller getBufferModifier(int inputHeight, int outputHeight, int inputWidth , int outputWidth) {
 
-        BufferScaler bufferModifier = new BufferScaler();
+        ArrayFloatScaller bufferModifier = new ArrayFloatScaller();
 
         bufferModifier.setInputHeight(inputHeight);
         bufferModifier.setOutputHeight(outputHeight);
@@ -92,37 +86,22 @@ public class BufferModifierTest {
 
     }
 
-    @Test
-    public void shouldScaleFloatBufferWithMaxRatio(){
 
-        BufferScaler bufferModifier = getBufferModifier(2, 4,4,16);
-
-        Assert.assertNotEquals(bufferModifier.getInputHeight(),bufferModifier.getOutputHeight());
-        Assert.assertNotEquals(bufferModifier.getInputWidth(),bufferModifier.getOutputWidth());
-
-        FloatBuffer outFloatBuffer =bufferModifier.scaleFloatBuffer(floatBuffer);
-
-        float ratioHeight = outFloatBuffer.get(0)/floatBuffer.get(0);
-        float ratioWidth = outFloatBuffer.get(1)/floatBuffer.get(1);
-
-        Assert.assertThat(ratioHeight,equalTo(ratioWidth));
-
-    }
 
     @Test
     public void shouldNotScaleFloatBufferIfScaleTypeCenterCrop(){
 
-        BufferScaler bufferModifier = getBufferModifier(2, 4,4,16);
+        ArrayFloatScaller bufferModifier = getBufferModifier(2, 4,4,8);
 
         Assert.assertNotEquals(bufferModifier.getInputHeight(),bufferModifier.getOutputHeight());
         Assert.assertNotEquals(bufferModifier.getInputWidth(),bufferModifier.getOutputWidth());
 
         bufferModifier.setScaleType(GPUImage.ScaleType.CENTER_CROP);
 
-        FloatBuffer outFloatBuffer =bufferModifier.scaleFloatBuffer(floatBuffer);
+        float[] outFloatBuffer =bufferModifier.scaleFloatBuffer(CUBE);
 
-        Assert.assertThat(outFloatBuffer.get(0),equalTo(floatBuffer.get(0)));
-        Assert.assertThat(outFloatBuffer.get(1),equalTo(floatBuffer.get(1)));
+        Assert.assertThat(outFloatBuffer[0],equalTo(CUBE[0]));
+        Assert.assertThat(outFloatBuffer[1],equalTo(CUBE[1]));
 
     }
 

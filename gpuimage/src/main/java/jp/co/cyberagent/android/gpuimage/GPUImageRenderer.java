@@ -26,8 +26,6 @@ import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
 
-import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.io.IOException;
@@ -37,6 +35,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
+
+import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
@@ -268,46 +268,28 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
 
     private void adjustImageScaling() {
-        float outputWidth = mOutputWidth;
-        float outputHeight = mOutputHeight;
-        if (mRotation == Rotation.ROTATION_270 || mRotation == Rotation.ROTATION_90) {
-            outputWidth = mOutputHeight;
-            outputHeight = mOutputWidth;
-        }
 
-        float ratio1 = outputWidth / mImageWidth;
-        float ratio2 = outputHeight / mImageHeight;
-        float ratioMax = Math.max(ratio1, ratio2);
-        int imageWidthNew = Math.round(mImageWidth * ratioMax);
-        int imageHeightNew = Math.round(mImageHeight * ratioMax);
-
-        float ratioWidth = imageWidthNew / outputWidth;
-        float ratioHeight = imageHeightNew / outputHeight;
-
-        float[] cube = CUBE;
-        float[] textureCords = TextureRotationUtil.getRotation(mRotation, mFlipHorizontal, mFlipVertical);
-        if (mScaleType == GPUImage.ScaleType.CENTER_CROP) {
-            float distHorizontal = (1 - 1 / ratioWidth) / 2;
-            float distVertical = (1 - 1 / ratioHeight) / 2;
-            textureCords = new float[]{
-                    addDistance(textureCords[0], distHorizontal), addDistance(textureCords[1], distVertical),
-                    addDistance(textureCords[2], distHorizontal), addDistance(textureCords[3], distVertical),
-                    addDistance(textureCords[4], distHorizontal), addDistance(textureCords[5], distVertical),
-                    addDistance(textureCords[6], distHorizontal), addDistance(textureCords[7], distVertical),
-            };
-        } else {
-            cube = new float[]{
-                    CUBE[0] / ratioHeight, CUBE[1] / ratioWidth,
-                    CUBE[2] / ratioHeight, CUBE[3] / ratioWidth,
-                    CUBE[4] / ratioHeight, CUBE[5] / ratioWidth,
-                    CUBE[6] / ratioHeight, CUBE[7] / ratioWidth,
-            };
-        }
+        ArrayFloatScaller bufferScaler = new ArrayFloatScaller();
+        bufferScaler.setInputHeight(mImageHeight);
+        bufferScaler.setInputWidth(mImageWidth);
+        bufferScaler.setOutputHeight(mOutputHeight);
+        bufferScaler.setOutputWidth(mOutputWidth);
+        bufferScaler.setScaleType(mScaleType);
+        bufferScaler.setRotation(mRotation);
 
         mGLCubeBuffer.clear();
-        mGLCubeBuffer.put(cube).position(0);
+        mGLCubeBuffer.put( bufferScaler.scaleFloatBuffer(CUBE)).position(0);
+
+        arrayFloatFlipper bufferFlipper = new arrayFloatFlipper();
+        bufferFlipper.setScaleType(mScaleType);
+        bufferFlipper.setRatioHeightMax(bufferScaler.getRatioHeightMax());
+        bufferFlipper.setRatioWidthMax(bufferScaler.getRatioWidthMax());
+        bufferFlipper.setRotation(mRotation);
+
         mGLTextureBuffer.clear();
-        mGLTextureBuffer.put(textureCords).position(0);
+        mGLTextureBuffer.put(bufferFlipper.getBufferCoordinates()).position(0);
+
+
     }
 
     private float addDistance(float coordinate, float distance) {

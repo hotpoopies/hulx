@@ -88,6 +88,11 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
         });
     }
 
+    private void adjustBitmapScaling(){
+
+
+    }
+
     public Bitmap getBitmap() {
         return mBitmap;
     }
