@@ -7,8 +7,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -35,7 +33,7 @@ public class BufferModifierTest {
     @Test
     public void shouldScaleFloatBufferIfDifferentHeightInputAndOutput(){
 
-        ArrayFloatScaller bufferModifier = getBufferModifier(5, 10,5,5);
+        ArrayFloatScaler bufferModifier = getBufferModifier(5, 10,5,5);
 
         Assert.assertNotEquals(bufferModifier.getInputHeight(),bufferModifier.getOutputHeight());
 
@@ -49,7 +47,7 @@ public class BufferModifierTest {
     @Test
     public void shouldScaleFloatBufferIfDifferentWidthInputAndOutput(){
 
-        ArrayFloatScaller bufferModifier = getBufferModifier(5, 5,5,10);
+        ArrayFloatScaler bufferModifier = getBufferModifier(5, 5,5,10);
 
         Assert.assertNotEquals(bufferModifier.getInputWidth(),bufferModifier.getOutputWidth());
 
@@ -62,7 +60,7 @@ public class BufferModifierTest {
     @Test
     public void shouldNotScaleFloatBuffer(){
 
-        ArrayFloatScaller bufferModifier = getBufferModifier(5, 5,5,5);
+        ArrayFloatScaler bufferModifier = getBufferModifier(5, 5,5,5);
 
         Assert.assertEquals(bufferModifier.getInputHeight(),bufferModifier.getOutputHeight());
         Assert.assertEquals(bufferModifier.getInputWidth(),bufferModifier.getOutputWidth());
@@ -73,9 +71,9 @@ public class BufferModifierTest {
 
     }
 
-    private ArrayFloatScaller getBufferModifier(int inputHeight, int outputHeight, int inputWidth , int outputWidth) {
+    private ArrayFloatScaler getBufferModifier(int inputHeight, int outputHeight, int inputWidth , int outputWidth) {
 
-        ArrayFloatScaller bufferModifier = new ArrayFloatScaller();
+        ArrayFloatScaler bufferModifier = new ArrayFloatScaler();
 
         bufferModifier.setInputHeight(inputHeight);
         bufferModifier.setOutputHeight(outputHeight);
@@ -91,7 +89,7 @@ public class BufferModifierTest {
     @Test
     public void shouldNotScaleFloatBufferIfScaleTypeCenterCrop(){
 
-        ArrayFloatScaller bufferModifier = getBufferModifier(2, 4,4,8);
+        ArrayFloatScaler bufferModifier = getBufferModifier(2, 4,4,8);
 
         Assert.assertNotEquals(bufferModifier.getInputHeight(),bufferModifier.getOutputHeight());
         Assert.assertNotEquals(bufferModifier.getInputWidth(),bufferModifier.getOutputWidth());

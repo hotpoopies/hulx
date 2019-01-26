@@ -61,8 +61,8 @@ public class GPUImageTransformFilter extends GPUImageFilter {
     }
 
     @Override
-    public void onOutputSizeChanged(final int width, final int height) {
-        super.onOutputSizeChanged(width, height);
+    public void onOutputSizeChanged(final int width, final int height, GPUImage.ScaleType scaleType,Rotation rotation) {
+        super.onOutputSizeChanged(width, height,scaleType,rotation);
 
         if (!ignoreAspectRatio) {
             Matrix.orthoM(orthographicMatrix, 0, -1.0f, 1.0f, -1.0f * (float) height / (float) width, 1.0f * (float) height / (float) width, -1.0f, 1.0f);
@@ -115,7 +115,7 @@ public class GPUImageTransformFilter extends GPUImageFilter {
             Matrix.orthoM(orthographicMatrix, 0, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
             setUniformMatrix4f(orthographicMatrixUniform, orthographicMatrix);
         } else {
-            onOutputSizeChanged(getOutputWidth(), getOutputHeight());
+            onOutputSizeChanged(getOutputWidth(), getOutputHeight(),GPUImage.ScaleType.CENTER_INSIDE,Rotation.NORMAL);
         }
     }
 

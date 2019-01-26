@@ -134,15 +134,15 @@ public class GPUImageFilterGroup extends GPUImageFilter {
      * int)
      */
     @Override
-    public void onOutputSizeChanged(final int width, final int height) {
-        super.onOutputSizeChanged(width, height);
+    public void onOutputSizeChanged(final int width, final int height, GPUImage.ScaleType scaleType,Rotation rotation) {
+        super.onOutputSizeChanged(width, height,scaleType,rotation);
         if (mFrameBuffers != null) {
             destroyFramebuffers();
         }
 
         int size = mFilters.size();
         for (int i = 0; i < size; i++) {
-            mFilters.get(i).onOutputSizeChanged(width, height);
+            mFilters.get(i).onOutputSizeChanged(width, height,scaleType,rotation);
         }
 
         if (mMergedFilters != null && mMergedFilters.size() > 0) {

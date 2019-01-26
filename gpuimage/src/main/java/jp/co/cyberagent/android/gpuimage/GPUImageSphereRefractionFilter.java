@@ -84,10 +84,10 @@ public class GPUImageSphereRefractionFilter extends GPUImageFilter {
     }
 
     @Override
-    public void onOutputSizeChanged(int width, int height) {
+    public void onOutputSizeChanged(final int width, final int height, GPUImage.ScaleType scaleType,Rotation rotation) {
         mAspectRatio = (float) height / width;
         setAspectRatio(mAspectRatio);
-        super.onOutputSizeChanged(width, height);
+        super.onOutputSizeChanged(width, height,scaleType,rotation);
     }
 
     private void setAspectRatio(float aspectRatio) {

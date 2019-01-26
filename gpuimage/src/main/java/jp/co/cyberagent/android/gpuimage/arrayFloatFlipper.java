@@ -31,7 +31,7 @@ public class arrayFloatFlipper {
     };
 
     private Rotation rotation=Rotation.NORMAL;
-    
+
     public float[] getBufferCoordinates() {
 
         float[] flipCoordinates = TEXTURE_NO_ROTATION;
@@ -58,6 +58,24 @@ public class arrayFloatFlipper {
 
         }
 
+        float[] rotatedTex= flipCoordinates;
+
+        if (flipHorizontal) {
+            rotatedTex = new float[]{
+                    flip(rotatedTex[0]), rotatedTex[1],
+                    flip(rotatedTex[2]), rotatedTex[3],
+                    flip(rotatedTex[4]), rotatedTex[5],
+                    flip(rotatedTex[6]), rotatedTex[7],
+            };
+        }
+        if (flipVertical) {
+            rotatedTex = new float[]{
+                    rotatedTex[0], flip(rotatedTex[1]),
+                    rotatedTex[2], flip(rotatedTex[3]),
+                    rotatedTex[4], flip(rotatedTex[5]),
+                    rotatedTex[6], flip(rotatedTex[7]),
+            };
+        }
 
         if (scaleType == GPUImage.ScaleType.CENTER_CROP) {
 
@@ -65,16 +83,23 @@ public class arrayFloatFlipper {
             float distVertical = (1 - 1 / ratioHeightMax) / 2;
 
             flipCoordinates = new float[]{
-                    addDistance(flipCoordinates[0], distHorizontal), addDistance(flipCoordinates[1], distVertical),
-                    addDistance(flipCoordinates[2], distHorizontal), addDistance(flipCoordinates[3], distVertical),
-                    addDistance(flipCoordinates[4], distHorizontal), addDistance(flipCoordinates[5], distVertical),
-                    addDistance(flipCoordinates[6], distHorizontal), addDistance(flipCoordinates[7], distVertical),
+                    addDistance(rotatedTex[0], distHorizontal), addDistance(rotatedTex[1], distVertical),
+                    addDistance(rotatedTex[2], distHorizontal), addDistance(rotatedTex[3], distVertical),
+                    addDistance(rotatedTex[4], distHorizontal), addDistance(rotatedTex[5], distVertical),
+                    addDistance(rotatedTex[6], distHorizontal), addDistance(rotatedTex[7], distVertical),
             };
 
         }
 
         return  flipCoordinates;
 
+    }
+
+    private static float flip(final float i) {
+        if (i == 0.0f) {
+            return 1.0f;
+        }
+        return 0.0f;
     }
 
     private float addDistance(float coordinate, float distance) {
@@ -128,4 +153,23 @@ public class arrayFloatFlipper {
         this.ratioHeightMax = ratioHeight;
     }
 
+    private boolean flipVertical;
+    private boolean flipHorizontal;
+
+    public void setFlipVertical(boolean flipVertical) {
+
+        this.flipVertical = flipVertical;
+    }
+
+    public boolean getFlipVertical() {
+        return flipVertical;
+    }
+
+    public void setFlipHorizontal(boolean flipHorizontal) {
+        this.flipHorizontal = flipHorizontal;
+    }
+
+    public boolean getFlipHorizontal() {
+        return flipHorizontal;
+    }
 }

@@ -58,6 +58,7 @@ public class GPUImageFilter {
     protected int mOutputHeight;
     private boolean mIsInitialized;
 
+
     public GPUImageFilter() {
         this(NO_FILTER_VERTEX_SHADER, NO_FILTER_FRAGMENT_SHADER);
     }
@@ -95,9 +96,14 @@ public class GPUImageFilter {
     public void onDestroy() {
     }
 
-    public void onOutputSizeChanged(final int width, final int height) {
+    private Rotation rotation;
+    private GPUImage.ScaleType scaleType;
+
+    public void onOutputSizeChanged(final int width, final int height, GPUImage.ScaleType scaleType, Rotation rotation) {
         mOutputWidth = width;
         mOutputHeight = height;
+        this.rotation = rotation;
+        this.scaleType = scaleType;
     }
 
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
@@ -274,5 +280,21 @@ public class GPUImageFilter {
     public static String convertStreamToString(InputStream is) {
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
+    }
+
+    public Rotation getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(Rotation rotation) {
+        this.rotation = rotation;
+    }
+
+    public GPUImage.ScaleType getScaleType() {
+        return scaleType;
+    }
+
+    public void setScaleType(GPUImage.ScaleType scaleType) {
+        this.scaleType = scaleType;
     }
 }

@@ -49,9 +49,8 @@ public class GPUImageHalftoneFilter extends GPUImageFilter {
         setFractionalWidthOfAPixel(mFractionalWidthOfAPixel);
     }
 
-    @Override
-    public void onOutputSizeChanged(final int width, final int height) {
-        super.onOutputSizeChanged(width, height);
+    public void onOutputSizeChanged(final int width, final int height, GPUImage.ScaleType scaleType,Rotation rotation) {
+        super.onOutputSizeChanged(width, height,scaleType,rotation);
         setAspectRatio((float)height / (float) width);
     }
 

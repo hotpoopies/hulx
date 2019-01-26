@@ -36,8 +36,6 @@ import java.nio.IntBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
-
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
 @TargetApi(11)
@@ -106,7 +104,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         mOutputHeight = height;
         GLES20.glViewport(0, 0, width, height);
         GLES20.glUseProgram(mFilter.getProgram());
-        mFilter.onOutputSizeChanged(width, height);
+        mFilter.onOutputSizeChanged(width, height,mScaleType,mRotation);
         adjustImageScaling();
         synchronized (mSurfaceChangedWaiter) {
             mSurfaceChangedWaiter.notifyAll();
@@ -200,7 +198,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                 }
                 mFilter.init();
                 GLES20.glUseProgram(mFilter.getProgram());
-                mFilter.onOutputSizeChanged(mOutputWidth, mOutputHeight);
+                mFilter.onOutputSizeChanged(mOutputWidth, mOutputHeight,mScaleType,mRotation);
             }
         });
     }
@@ -269,25 +267,25 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     private void adjustImageScaling() {
 
-        ArrayFloatScaller bufferScaler = new ArrayFloatScaller();
-        bufferScaler.setInputHeight(mImageHeight);
-        bufferScaler.setInputWidth(mImageWidth);
-        bufferScaler.setOutputHeight(mOutputHeight);
-        bufferScaler.setOutputWidth(mOutputWidth);
-        bufferScaler.setScaleType(mScaleType);
-        bufferScaler.setRotation(mRotation);
+
+        ImageBufferScaler imageBufferScaler = new ImageBufferScaler(CUBE);
+
+        imageBufferScaler.setInputHeight(mImageHeight);
+        imageBufferScaler.setInputWidth(mImageWidth);
+        imageBufferScaler.setOutputHeight(mOutputHeight);
+        imageBufferScaler.setOutputWidth(mOutputWidth);
+        imageBufferScaler.setScaleType(mScaleType);
+        imageBufferScaler.setRotation(mRotation);
+
+        imageBufferScaler.ScaleImageBuffer();
+
 
         mGLCubeBuffer.clear();
-        mGLCubeBuffer.put( bufferScaler.scaleFloatBuffer(CUBE)).position(0);
+        mGLCubeBuffer.put( imageBufferScaler.getPointFloatBuffer()).position(0);
 
-        arrayFloatFlipper bufferFlipper = new arrayFloatFlipper();
-        bufferFlipper.setScaleType(mScaleType);
-        bufferFlipper.setRatioHeightMax(bufferScaler.getRatioHeightMax());
-        bufferFlipper.setRatioWidthMax(bufferScaler.getRatioWidthMax());
-        bufferFlipper.setRotation(mRotation);
 
         mGLTextureBuffer.clear();
-        mGLTextureBuffer.put(bufferFlipper.getBufferCoordinates()).position(0);
+        mGLTextureBuffer.put(imageBufferScaler.getTextureFloatBuffer()).position(0);
 
 
     }

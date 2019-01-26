@@ -1,7 +1,7 @@
 package jp.co.cyberagent.android.gpuimage;
 
 
-public class ArrayFloatScaller {
+public class ArrayFloatScaler {
     
     private float ratio;
 

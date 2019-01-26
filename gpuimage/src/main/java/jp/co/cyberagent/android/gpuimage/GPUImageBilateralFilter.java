@@ -148,8 +148,9 @@ public class GPUImageBilateralFilter extends GPUImageFilter {
 	}
 	
 	@Override
-    public void onOutputSizeChanged(final int width, final int height) {
-        super.onOutputSizeChanged(width, height);
+	public void onOutputSizeChanged(final int width, final int height, GPUImage.ScaleType scaleType,Rotation rotation) {
+
+		super.onOutputSizeChanged(width, height,scaleType,rotation);
         setTexelSize(width, height);
     }
 }

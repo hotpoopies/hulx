@@ -28,6 +28,8 @@ public class BufferFlipperTest {
         bufferFlipper.setRotation(Rotation.NORMAL);
         bufferFlipper.setRatioHeightMax(2);
         bufferFlipper.setRatioWidthMax(2);
+        bufferFlipper.setFlipHorizontal(false);
+        bufferFlipper.setFlipVertical(false);
 
         float[] floatArrayTest =bufferFlipper.getBufferCoordinates();
 
