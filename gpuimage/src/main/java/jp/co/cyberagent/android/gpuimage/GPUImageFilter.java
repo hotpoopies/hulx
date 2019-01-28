@@ -18,6 +18,7 @@ package jp.co.cyberagent.android.gpuimage;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 
@@ -296,5 +297,16 @@ public class GPUImageFilter {
 
     public void setScaleType(GPUImage.ScaleType scaleType) {
         this.scaleType = scaleType;
+    }
+
+
+    private float[] touchColor;
+
+    public float[] getTouchColor() {
+        return touchColor;
+    }
+
+    public void setTouchColor(float[] touchColor) {
+        this.touchColor = touchColor;
     }
 }

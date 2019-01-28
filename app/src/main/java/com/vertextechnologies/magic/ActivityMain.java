@@ -33,6 +33,8 @@ public class ActivityMain extends Activity implements OnClickListener {
         setContentView(R.layout.activity_main);
         findViewById(R.id.button_gallery).setOnClickListener(this);
         findViewById(R.id.button_camera).setOnClickListener(this);
+
+
     }
 
     @Override public void onClick(final View v) {
@@ -67,4 +69,6 @@ public class ActivityMain extends Activity implements OnClickListener {
                 break;
         }
     }
+
+
 }

@@ -21,8 +21,7 @@ import android.opengl.GLES20;
 /**
  * Selectively replaces a color in the first image with the second image
  */
-public class GPUImageChromaKeyBlendFilter extends GPUImageTwoInputFilter {
-    public static final String CHROMA_KEY_BLEND_FRAGMENT_SHADER = " precision highp float;\n" +
+public class GPUImageChromaKeyBlendFilter extends GPUImageTwoInputFilter { public static final String CHROMA_KEY_BLEND_FRAGMENT_SHADER = " precision highp float;\n" +
             " \n" +
             " varying highp vec2 textureCoordinate;\n" +
             " varying highp vec2 textureCoordinate2;\n" +
@@ -50,6 +49,8 @@ public class GPUImageChromaKeyBlendFilter extends GPUImageTwoInputFilter {
             "     gl_FragColor = mix(textureColor, textureColor2, blendValue);\n" +
             " }";
 
+
+
     private int mThresholdSensitivityLocation;
     private int mSmoothingLocation;
     private int mColorToReplaceLocation;
@@ -68,6 +69,7 @@ public class GPUImageChromaKeyBlendFilter extends GPUImageTwoInputFilter {
         mThresholdSensitivityLocation = GLES20.glGetUniformLocation(getProgram(), "thresholdSensitivity");
         mSmoothingLocation = GLES20.glGetUniformLocation(getProgram(), "smoothing");
         mColorToReplaceLocation = GLES20.glGetUniformLocation(getProgram(), "colorToReplace");
+
     }
 
     @Override
@@ -106,5 +108,16 @@ public class GPUImageChromaKeyBlendFilter extends GPUImageTwoInputFilter {
     public void setColorToReplace(float redComponent, float greenComponent, float blueComponent) {
         mColorToReplace = new float[]{redComponent, greenComponent, blueComponent};
         setFloatVec3(mColorToReplaceLocation, mColorToReplace);
+    }
+
+    @Override
+    protected void onDrawArraysPre() {
+
+        super.onDrawArraysPre();
+
+        if(getTouchColor()!=null) {
+            setColorToReplace(getTouchColor()[0], getTouchColor()[1], getTouchColor()[2]);
+        }
+
     }
 }

@@ -98,6 +98,10 @@ public class GPUImage {
         mGlSurfaceView.setRenderer(mRenderer);
         mGlSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mGlSurfaceView.requestRender();
+
+
+        mRenderer.setContext(mContext);
+        mGlSurfaceView.setOnTouchListener(mRenderer);
     }
 
     /**

@@ -36,6 +36,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -43,7 +44,10 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
+import com.vertextechnologies.magic.utils.CameraBitmapSaver;
 import com.vertextechnologies.magic.utils.CameraHelper;
+import com.vertextechnologies.magic.utils.CameraLoader;
+import com.vertextechnologies.magic.utils.CameraPictureCallback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -61,6 +65,7 @@ import jp.co.cyberagent.android.gpuimage.GPUImageChromaKeyBlendFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageContrastFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageFilterGroup;
+import jp.co.cyberagent.android.gpuimage.GPUImageOpacityFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageTransformFilter;
 
 public class ActivityCamera extends Activity implements OnSeekBarChangeListener, OnClickListener {
@@ -92,6 +97,8 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
     private GPUImageFilterGroup filterGroup;
 
+    private static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION = 1;
+
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,8 +113,9 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
         mGPUImage.setGLSurfaceView((GLSurfaceView) findViewById(R.id.surfaceView));
 
 
+
         mCameraHelper = new CameraHelper(this);
-        mCamera = new CameraLoader();
+        mCamera = new CameraLoader(mCameraHelper,mGPUImage,this);
 
 
         textViewContrastValue=(TextView) findViewById(R.id.textViewContrastValue);
@@ -132,6 +140,13 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
 
         seekBar.setProgress(50);
+
+        int writeExternalStoragePermission = ContextCompat.checkSelfPermission(ActivityCamera.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if(writeExternalStoragePermission!= PackageManager.PERMISSION_GRANTED)
+        {
+            // Request user to grant write external storage permission.
+            ActivityCompat.requestPermissions(ActivityCamera.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
+        }
 
     }
 
@@ -212,11 +227,11 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
                 break;
 
             case R.id.button_capture:
-                if (mCamera.mCameraInstance.getParameters().getFocusMode().equals(
+                if (mCamera.getCameraInstannce().getParameters().getFocusMode().equals(
                         Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
                     takePicture();
                 } else {
-                    mCamera.mCameraInstance.autoFocus(new Camera.AutoFocusCallback() {
+                    mCamera.getCameraInstannce().autoFocus(new Camera.AutoFocusCallback() {
 
                         @Override
                         public void onAutoFocus(final boolean success, final Camera camera) {
@@ -243,14 +258,25 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
     }
 
     private void takePicture() {
+
+
+        CameraBitmapSaver cameraBitmapSaver = new CameraBitmapSaver(mCamera,mGPUImage);
+
+        CameraPictureCallback cameraPictureCallback =
+                new CameraPictureCallback(
+                        mGPUImage,mCamera.getCameraInstannce(),
+                        (GLSurfaceView) findViewById(R.id.surfaceView));
+
+        cameraBitmapSaver.takePicture(cameraPictureCallback);
+
         // TODO get a size that is about the size of the screen
-        Parameters params = mCamera.mCameraInstance.getParameters();
+        /*Parameters params = mCamera.getCameraInstannce().getParameters();
         params.setRotation(90);
-        mCamera.mCameraInstance.setParameters(params);
+        mCamera.getCameraInstannce().setParameters(params);
         for (Camera.Size size : params.getSupportedPictureSizes()) {
             Log.i("ASDF", "Supported: " + size.width + "x" + size.height);
         }
-        mCamera.mCameraInstance.takePicture(null, null,
+        mCamera.getCameraInstannce().takePicture(null, null,
                 new Camera.PictureCallback() {
 
                     @Override
@@ -292,12 +318,13 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
                                 });
                     }
                 });
+                */
     }
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
 
-    private static File getOutputMediaFile(final int type) {
+    /*private static File getOutputMediaFile(final int type) {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
@@ -328,7 +355,7 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
         }
 
         return mediaFile;
-    }
+    }*/
 
     private void   switchFilterTo(final GPUImageFilter filter) {
        // if (mFilter == null
@@ -524,59 +551,5 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
     public void onStopTrackingTouch(final SeekBar seekBar) {
     }
 
-    private class CameraLoader {
 
-        private int mCurrentCameraId = 0;
-        private Camera mCameraInstance;
-
-        public void onResume() {
-            setUpCamera(mCurrentCameraId);
-        }
-
-        public void onPause() {
-            releaseCamera();
-        }
-
-        public void switchCamera() {
-            releaseCamera();
-            mCurrentCameraId = (mCurrentCameraId + 1) % mCameraHelper.getNumberOfCameras();
-            setUpCamera(mCurrentCameraId);
-        }
-
-        private void setUpCamera(final int id) {
-            mCameraInstance = getCameraInstance(id);
-            Parameters parameters = mCameraInstance.getParameters();
-            // TODO adjust by getting supportedPreviewSizes and then choosing
-            // the best one for screen size (best fill screen)
-            if (parameters.getSupportedFocusModes().contains(
-                    Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-                parameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-            }
-            mCameraInstance.setParameters(parameters);
-
-            int orientation = mCameraHelper.getCameraDisplayOrientation(
-                    ActivityCamera.this, mCurrentCameraId);
-            CameraHelper.CameraInfo2 cameraInfo = new CameraHelper.CameraInfo2();
-            mCameraHelper.getCameraInfo(mCurrentCameraId, cameraInfo);
-            boolean flipHorizontal = cameraInfo.facing == CameraInfo.CAMERA_FACING_FRONT;
-            mGPUImage.setUpCamera(mCameraInstance, orientation, flipHorizontal, false);
-        }
-
-        /** A safe way to get an instance of the Camera object. */
-        private Camera getCameraInstance(final int id) {
-            Camera c = null;
-            try {
-                c = mCameraHelper.openCamera(id);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return c;
-        }
-
-        private void releaseCamera() {
-            mCameraInstance.setPreviewCallback(null);
-            mCameraInstance.release();
-            mCameraInstance = null;
-        }
-    }
 }

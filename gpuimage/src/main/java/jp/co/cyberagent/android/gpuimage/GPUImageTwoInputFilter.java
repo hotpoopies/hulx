@@ -139,21 +139,23 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
 
     private FloatBuffer adjustImageScaling(FloatBuffer floatBuffer) {
 
+        if(mBitmap!=null) {
 
-        ImageBufferScaler imageBufferScaler = new ImageBufferScaler(Constants.CUBE);
+            ImageBufferScaler imageBufferScaler = new ImageBufferScaler(Constants.CUBE);
 
-        imageBufferScaler.setInputHeight(mBitmap.getHeight());
-        imageBufferScaler.setInputWidth(mBitmap.getWidth());
-        imageBufferScaler.setOutputHeight(getOutputHeight());
-        imageBufferScaler.setOutputWidth(getOutputWidth());
-        imageBufferScaler.setScaleType(getScaleType());
-        imageBufferScaler.setRotation(getRotation());
+            imageBufferScaler.setInputHeight(mBitmap.getHeight());
+            imageBufferScaler.setInputWidth(mBitmap.getWidth());
+            imageBufferScaler.setOutputHeight(getOutputHeight());
+            imageBufferScaler.setOutputWidth(getOutputWidth());
+            imageBufferScaler.setScaleType(getScaleType());
+            imageBufferScaler.setRotation(getRotation());
 
-        imageBufferScaler.ScaleImageBuffer();
+            imageBufferScaler.ScaleImageBuffer();
 
-        floatBuffer.clear();
-        floatBuffer.put( imageBufferScaler.getPointFloatBuffer()).position(0);
+            floatBuffer.clear();
+            floatBuffer.put(imageBufferScaler.getPointFloatBuffer()).position(0);
 
+        }
 
         return floatBuffer;
 
