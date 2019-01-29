@@ -1,6 +1,5 @@
 package com.vertextechnologies.magic.utils;
 
-import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.util.Log;
 

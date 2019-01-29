@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
 
-import com.vertextechnologies.magic.ActivityCamera;
-
 import jp.co.cyberagent.android.gpuimage.GPUImage;
 
 public class CameraLoader {

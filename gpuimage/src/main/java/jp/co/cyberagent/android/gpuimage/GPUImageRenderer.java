@@ -27,6 +27,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
 import android.os.Environment;
@@ -56,7 +57,7 @@ import java.util.Queue;
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
 @TargetApi(11)
-public class GPUImageRenderer implements Renderer, PreviewCallback, View.OnTouchListener {
+public class GPUImageRenderer implements Renderer, PreviewCallback {
     public static final int NO_IMAGE = -1;
     static final float CUBE[] = {
             -1.0f, -1.0f,
@@ -93,7 +94,18 @@ public class GPUImageRenderer implements Renderer, PreviewCallback, View.OnTouch
     private float mBackgroundBlue = 0;
     private Context context;
 
+    public int getmOutputWidth(){
+
+        return  mOutputWidth;
+    }
+
+    public  int getmOutputHeight(){
+
+
+        return  mOutputHeight;
+    }
     public GPUImageRenderer(final GPUImageFilter filter) {
+
         mFilter = filter;
         mRunOnDraw = new LinkedList<Runnable>();
         mRunOnDrawEnd = new LinkedList<Runnable>();
@@ -356,80 +368,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback, View.OnTouch
         }
     }
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
+    public void setSelectedColorFromCameraPreview(int[] rbg){
 
-        if(mOutputWidth!=0 && data !=null) {
-
-            /*int rgb[] = new int[mOutputWidth * mOutputHeight];
-
-
-            Bitmap bmp1 = Bitmap.createBitmap(mOutputWidth, mOutputHeight, Bitmap.Config.ARGB_8888);
-            Allocation bmData = renderScriptNV21ToRGBA888(
-                    context
-                   ,
-                    mOutputWidth,
-                    mOutputHeight,
-                    data);
-            bmData.copyTo(bmp1);*/
-
-            //int pixel = bmp1.getPixel( 0, 0);
-            //int redValue1 = Color.red(pixel);
-            //int blueValue1 = Color.blue(pixel);
-            //int greenValue1 = Color.green(pixel);
-
-           // mFilter.setTouchColor( new float[]{redValue1/255.0f,greenValue1/255.0f,blueValue1/255.0f});
-
-           //saveImage(bmp1);
-
-        }
-
-        return false;
-    }
-
-    public Allocation renderScriptNV21ToRGBA888(Context context, int width, int height, byte[] nv21) {
-        RenderScript rs = RenderScript.create(context);
-        ScriptIntrinsicYuvToRGB yuvToRgbIntrinsic = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            yuvToRgbIntrinsic = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
-        }
-
-        Type.Builder yuvType = new Type.Builder(rs, Element.U8(rs)).setX(nv21.length);
-        Allocation in = Allocation.createTyped(rs, yuvType.create(), Allocation.USAGE_SCRIPT);
-
-        Type.Builder rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(width).setY(height);
-        Allocation out = Allocation.createTyped(rs, rgbaType.create(), Allocation.USAGE_SCRIPT);
-
-        in.copyFrom(nv21);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            yuvToRgbIntrinsic.setInput(in);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            yuvToRgbIntrinsic.forEach(out);
-        }
-        return out;
-    }
-
-
-    private void saveImage(Bitmap finalBitmap) {
-
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/saved_images");
-        myDir.mkdirs();
-
-        String fname = "magic.jpg";
-
-        File file = new File(myDir, fname);
-        if (file.exists()) file.delete ();
-        try {
-            FileOutputStream out = new FileOutputStream(file);
-            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-            out.flush();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mFilter.setTouchColor(rbg);
     }
 
     public void setContext(Context context) {

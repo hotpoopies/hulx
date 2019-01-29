@@ -299,14 +299,17 @@ public class GPUImageFilter {
         this.scaleType = scaleType;
     }
 
+    private int[] touchColor;
 
-    private float[] touchColor;
+    public int[] getTouchColor() {
 
-    public float[] getTouchColor() {
         return touchColor;
+
     }
 
-    public void setTouchColor(float[] touchColor) {
+    public void setTouchColor(int[] touchColor) {
+
         this.touchColor = touchColor;
+
     }
 }

@@ -38,6 +38,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.SeekBar;
@@ -48,6 +49,7 @@ import com.vertextechnologies.magic.utils.CameraBitmapSaver;
 import com.vertextechnologies.magic.utils.CameraHelper;
 import com.vertextechnologies.magic.utils.CameraLoader;
 import com.vertextechnologies.magic.utils.CameraPictureCallback;
+import com.vertextechnologies.magic.utils.PickColorFromCameraPreviewRendererCallback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -68,7 +70,7 @@ import jp.co.cyberagent.android.gpuimage.GPUImageFilterGroup;
 import jp.co.cyberagent.android.gpuimage.GPUImageOpacityFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageTransformFilter;
 
-public class ActivityCamera extends Activity implements OnSeekBarChangeListener, OnClickListener {
+public class ActivityCamera extends Activity implements OnSeekBarChangeListener, OnClickListener, View.OnTouchListener {
 
     private GPUImage mGPUImage;
     private CameraHelper mCameraHelper;
@@ -101,8 +103,11 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_camera);
+
         ((SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(this);
         findViewById(R.id.button_choose_filter).setOnClickListener(this);
         findViewById(R.id.button_choose_background).setOnClickListener(this);
@@ -110,13 +115,13 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         mGPUImage = new GPUImage(this);
-        mGPUImage.setGLSurfaceView((GLSurfaceView) findViewById(R.id.surfaceView));
 
-
+        GLSurfaceView surfaceView = (GLSurfaceView) findViewById(R.id.surfaceView);
+        mGPUImage.setGLSurfaceView(surfaceView);
+        surfaceView.setOnTouchListener(this);
 
         mCameraHelper = new CameraHelper(this);
         mCamera = new CameraLoader(mCameraHelper,mGPUImage,this);
-
 
         textViewContrastValue=(TextView) findViewById(R.id.textViewContrastValue);
         textViewBrightnessValue=(TextView) findViewById(R.id.textViewBrightnessValue);
@@ -127,24 +132,28 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
         View cameraSwitchView = findViewById(R.id.img_switch_camera);
         cameraSwitchView.setOnClickListener(this);
-        if (!mCameraHelper.hasFrontCamera() || !mCameraHelper.hasBackCamera()) {
-            cameraSwitchView.setVisibility(View.GONE);
-        }
 
+        if (!mCameraHelper.hasFrontCamera() || !mCameraHelper.hasBackCamera()) {
+
+            cameraSwitchView.setVisibility(View.GONE);
+
+        }
 
         List<GPUImageFilter> filters = new LinkedList<GPUImageFilter>();
 
-
         filterGroup = new GPUImageFilterGroup(filters);
-        switchFilterTo( GPUImageFilterTools.createBlendFilter(this, GPUImageChromaKeyBlendFilter.class,null));
 
+        switchFilterTo(
+                GPUImageFilterTools.createBlendFilter(
+                        this, GPUImageChromaKeyBlendFilter.class,
+                        null)
+        );
 
         seekBar.setProgress(50);
 
         int writeExternalStoragePermission = ContextCompat.checkSelfPermission(ActivityCamera.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if(writeExternalStoragePermission!= PackageManager.PERMISSION_GRANTED)
         {
-            // Request user to grant write external storage permission.
             ActivityCompat.requestPermissions(ActivityCamera.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
 
@@ -259,7 +268,6 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
     private void takePicture() {
 
-
         CameraBitmapSaver cameraBitmapSaver = new CameraBitmapSaver(mCamera,mGPUImage);
 
         CameraPictureCallback cameraPictureCallback =
@@ -269,93 +277,7 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
 
         cameraBitmapSaver.takePicture(cameraPictureCallback);
 
-        // TODO get a size that is about the size of the screen
-        /*Parameters params = mCamera.getCameraInstannce().getParameters();
-        params.setRotation(90);
-        mCamera.getCameraInstannce().setParameters(params);
-        for (Camera.Size size : params.getSupportedPictureSizes()) {
-            Log.i("ASDF", "Supported: " + size.width + "x" + size.height);
-        }
-        mCamera.getCameraInstannce().takePicture(null, null,
-                new Camera.PictureCallback() {
-
-                    @Override
-                    public void onPictureTaken(byte[] data, final Camera camera) {
-
-                        final File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-                        if (pictureFile == null) {
-                            Log.d("ASDF",
-                                    "Error creating media file, check storage permissions");
-                            return;
-                        }
-
-                        try {
-                            FileOutputStream fos = new FileOutputStream(pictureFile);
-                            fos.write(data);
-                            fos.close();
-                        } catch (FileNotFoundException e) {
-                            Log.d("ASDF", "File not found: " + e.getMessage());
-                        } catch (IOException e) {
-                            Log.d("ASDF", "Error accessing file: " + e.getMessage());
-                        }
-
-                        data = null;
-                        Bitmap bitmap = BitmapFactory.decodeFile(pictureFile.getAbsolutePath());
-                        // mGPUImage.setImage(bitmap);
-                        final GLSurfaceView view = (GLSurfaceView) findViewById(R.id.surfaceView);
-                        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-                        mGPUImage.saveToPictures(bitmap, "GPUImage",
-                                System.currentTimeMillis() + ".jpg",
-                                new GPUImage.OnPictureSavedListener() {
-
-                                    @Override
-                                    public void onPictureSaved(final Uri
-                                                                       uri) {
-                                        pictureFile.delete();
-                                        camera.startPreview();
-                                        view.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-                                    }
-                                });
-                    }
-                });
-                */
     }
-
-    public static final int MEDIA_TYPE_IMAGE = 1;
-    public static final int MEDIA_TYPE_VIDEO = 2;
-
-    /*private static File getOutputMediaFile(final int type) {
-        // To be safe, you should check that the SDCard is mounted
-        // using Environment.getExternalStorageState() before doing this.
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "MyCameraApp");
-        // This location works best if you want the created images to be shared
-        // between applications and persist after your app has been uninstalled.
-
-        // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d("MyCameraApp", "failed to create directory");
-                return null;
-            }
-        }
-
-        // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File mediaFile;
-        if (type == MEDIA_TYPE_IMAGE) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_" + timeStamp + ".jpg");
-        } else if (type == MEDIA_TYPE_VIDEO) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "VID_" + timeStamp + ".mp4");
-        } else {
-            return null;
-        }
-
-        return mediaFile;
-    }*/
 
     private void   switchFilterTo(final GPUImageFilter filter) {
        // if (mFilter == null
@@ -369,10 +291,10 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
     @Override
     public void onProgressChanged(final SeekBar seekBar, final int progress,
                                   final boolean fromUser) {
+
         if (mFilterAdjuster != null) {
             mFilterAdjuster.adjust(progress);
         }
-
 
         switch (filterTypeField) {
 
@@ -442,6 +364,7 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
             }
         }
     }
+
     public static Bitmap modifyOrientation(Bitmap bitmap, String image_absolute_path) throws IOException {
         ExifInterface ei = new ExifInterface(image_absolute_path);
         int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
@@ -512,15 +435,15 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
                            }
 
                            List<GPUImageFilter> filters = new LinkedList<GPUImageFilter>();
-                            filters.add(new GPUImageContrastFilter());
-                            filters.add(new GPUImageBrightnessFilter());
+                           filters.add(new GPUImageContrastFilter());
+                           filters.add(new GPUImageBrightnessFilter());
 
-                            filters.add(new GPUImageTransformFilter());
+                           filters.add(new GPUImageTransformFilter());
 
-                            filters.add(GPUImageFilterTools.createBlendFilter(this, GPUImageChromaKeyBlendFilter.class,bm));
+                           filters.add(GPUImageFilterTools.createBlendFilter(this, GPUImageChromaKeyBlendFilter.class,bm));
 
-                            filterGroup = new GPUImageFilterGroup(filters);
-                            switchFilterTo( filterGroup);
+                           filterGroup = new GPUImageFilterGroup(filters);
+                           switchFilterTo( filterGroup);
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -552,4 +475,30 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
     }
 
 
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+
+
+        if (mCamera.getCameraInstannce().getParameters().getFocusMode().equals(
+                Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+            CameraBitmapSaver cameraBitmapSaver = new CameraBitmapSaver(mCamera,mGPUImage);
+            PickColorFromCameraPreviewRendererCallback pickColorFromCameraPreviewRendererCallback =
+                    new PickColorFromCameraPreviewRendererCallback(
+                            mGPUImage,mCamera.getCameraInstannce(),
+                            (GLSurfaceView) findViewById(R.id.surfaceView),mGPUImage.getmRenderer(),event.getRawX(),event.getRawY());
+
+            cameraBitmapSaver.takePicture(pickColorFromCameraPreviewRendererCallback);
+
+        } else {
+            mCamera.getCameraInstannce().autoFocus(new Camera.AutoFocusCallback() {
+
+                @Override
+                public void onAutoFocus(final boolean success, final Camera camera) {
+                    takePicture();
+                }
+            });
+        }
+
+        return false;
+    }
 }

@@ -15,22 +15,40 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import jp.co.cyberagent.android.gpuimage.GPUImage;
+import jp.co.cyberagent.android.gpuimage.GPUImageRenderer;
 
-public class CameraPictureCallback implements Camera.PictureCallback {
+public class PickColorFromCameraPreviewRendererCallback implements Camera.PictureCallback {
 
     public static final int MEDIA_TYPE_IMAGE = 1;
-    public static final int MEDIA_TYPE_VIDEO = 2;
-    private final GPUImage gpuImage;
-    private final Camera camera;
-    private GLSurfaceView view;
 
-    public CameraPictureCallback(GPUImage gpuImage,Camera camera,GLSurfaceView view){
+    public static final int MEDIA_TYPE_VIDEO = 2;
+
+    private final GPUImage gpuImage;
+
+    private final Camera camera;
+
+    private GLSurfaceView view;
+    private GPUImageRenderer gpuImageRenderer;
+    private float x;
+    private float y;
+
+    public PickColorFromCameraPreviewRendererCallback(GPUImage gpuImage,
+                                                      Camera camera,
+                                                      GLSurfaceView view,
+                                                      GPUImageRenderer gpuImageRenderer,
+                                                      float x, float y){
 
         this.gpuImage = gpuImage;
 
         this.camera = camera;
 
         this.view = view;
+
+        this.gpuImageRenderer = gpuImageRenderer;
+
+        this.x = x;
+
+        this.y = y;
 
     }
 
@@ -40,14 +58,19 @@ public class CameraPictureCallback implements Camera.PictureCallback {
         final File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 
         if (pictureFile == null) {
-            Log.d("ASDF",
-                    "Error creating media file, check storage permissions");
+
+            Log.d("ASDF", "Error creating media file, check storage permissions");
+
             return;
+
         }
 
         try {
+
             FileOutputStream fos = new FileOutputStream(pictureFile);
+
             fos.write(data);
+
             fos.close();
 
         } catch (FileNotFoundException e) {
@@ -64,10 +87,16 @@ public class CameraPictureCallback implements Camera.PictureCallback {
 
         Bitmap bitmap = BitmapFactory.decodeFile(pictureFile.getAbsolutePath());
 
+        BitmapPixelColorPicker bitmapPixelColorPicker = new BitmapPixelColorPicker(bitmap);
+
+        bitmapPixelColorPicker.setViewWidth(gpuImageRenderer.getmOutputWidth());
+
+        bitmapPixelColorPicker.setViewHeight(gpuImageRenderer.getmOutputHeight());
+
         pictureFile.delete();
+        gpuImageRenderer.setSelectedColorFromCameraPreview(bitmapPixelColorPicker.getColorFromPixel((int)x,(int)y));
 
-
-        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+       /* view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
         gpuImage.saveToPictures(bitmap, "GPUImage",
                 System.currentTimeMillis() + ".jpg",
@@ -76,6 +105,7 @@ public class CameraPictureCallback implements Camera.PictureCallback {
                     @Override
                     public void onPictureSaved(final Uri uri) {
 
+                        pictureFile.delete();
 
                         camera.startPreview();
 
@@ -83,7 +113,7 @@ public class CameraPictureCallback implements Camera.PictureCallback {
 
                     }
 
-                });
+                });*/
 
     }
 

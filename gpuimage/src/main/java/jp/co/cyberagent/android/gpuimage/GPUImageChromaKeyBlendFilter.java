@@ -116,7 +116,11 @@ public class GPUImageChromaKeyBlendFilter extends GPUImageTwoInputFilter { publi
         super.onDrawArraysPre();
 
         if(getTouchColor()!=null) {
-            setColorToReplace(getTouchColor()[0], getTouchColor()[1], getTouchColor()[2]);
+
+            setColorToReplace(getTouchColor()[0]/255f,
+                    getTouchColor()[1]/255f,
+                    getTouchColor()[2]/255f);
+
         }
 
     }

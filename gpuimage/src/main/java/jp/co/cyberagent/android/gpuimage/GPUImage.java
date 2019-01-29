@@ -91,6 +91,7 @@ public class GPUImage {
      * @param view the GLSurfaceView
      */
     public void setGLSurfaceView(final GLSurfaceView view) {
+
         mGlSurfaceView = view;
         mGlSurfaceView.setEGLContextClientVersion(2);
         mGlSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
@@ -99,9 +100,8 @@ public class GPUImage {
         mGlSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mGlSurfaceView.requestRender();
 
-
         mRenderer.setContext(mContext);
-        mGlSurfaceView.setOnTouchListener(mRenderer);
+
     }
 
     /**
@@ -718,4 +718,9 @@ public class GPUImage {
     }
 
     public enum ScaleType { CENTER_INSIDE, CENTER_CROP }
+
+    public GPUImageRenderer getmRenderer(){
+
+        return mRenderer;
+    }
 }
